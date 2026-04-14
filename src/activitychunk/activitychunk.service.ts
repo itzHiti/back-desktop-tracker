@@ -1,7 +1,11 @@
 import { ActivityChunk } from './entities/activitychunk.entity';
-import { Repository } from 'typeorm';
+import { IsNull, QueryFailedError, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { CreateActivityDto } from './dtos/create-activity.dto';
 
 @Injectable()
@@ -22,12 +26,35 @@ export class ActivityService {
       );
     }
 
+    const duplicate = await this.activityRepository.findOne({
+      where: {
+        startedAt,
+        appName: dto.appName,
+        appUrl: dto.appUrl === null ? IsNull() : dto.appUrl,
+      },
+    });
+
+    if (duplicate) {
+      throw new ConflictException('Duplicate chunk already exists');
+    }
+
     const activity = this.activityRepository.create({
       ...dto,
       startedAt,
       endedAt,
     });
-    return this.activityRepository.save(activity);
+    try {
+      return await this.activityRepository.save(activity);
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const driverError = error.driverError as { code?: string };
+        if (driverError?.code === '23505') {
+          throw new ConflictException('Duplicate chunk already exists');
+        }
+      }
+
+      throw error;
+    }
   }
 
   async findAll(): Promise<ActivityChunk[]> {

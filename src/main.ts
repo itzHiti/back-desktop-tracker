@@ -30,6 +30,8 @@ async function bootstrap() {
 }
 bootstrap()
   .then(() =>
-    console.log('Server is running under: ' + (process.env.PORT ?? 3000)),
+    console.log(
+      'Server is running under: ' + (process.env.PORT ?? 3000) + ' port',
+    ),
   )
   .catch((e) => console.error(e));
