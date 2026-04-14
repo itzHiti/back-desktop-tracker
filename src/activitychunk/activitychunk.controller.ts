@@ -1,11 +1,13 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
-  ApiBody, ApiConflictResponse,
+  ApiBody,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { ActivityService } from './activitychunk.service';
 import { CreateActivityDto } from './dtos/create-activity.dto';
@@ -46,6 +48,18 @@ export class ActivityController {
       properties: {
         statusCode: { type: 'number', example: 409 },
         message: { type: 'string', example: 'Duplicate chunk already exists' },
+      },
+    },
+  })
+  @ApiUnprocessableEntityResponse({
+    description: 'When appName is missing or empty',
+    schema: {
+      properties: {
+        statusCode: { type: 'number', example: 422 },
+        message: {
+          type: 'string',
+          example: 'appName is missing or empty. Please provide a valid value',
+        },
       },
     },
   })

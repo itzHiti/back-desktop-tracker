@@ -1,8 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  UnprocessableEntityException,
+  ValidationPipe,
+} from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './shared/http-exception.filter';
+import { ValidationError } from 'class-validator';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,6 +26,23 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       transform: true,
+      exceptionFactory: (errors: ValidationError[]) => {
+        const appNameError = errors.find(
+          (error) => error.property === 'appName',
+        );
+
+        if (appNameError?.constraints?.isNotEmpty) {
+          return new UnprocessableEntityException(
+            'appName is missing or empty. Please provide a valid value',
+          );
+        }
+
+        const messages = errors.flatMap((error) =>
+          error.constraints ? Object.values(error.constraints) : [],
+        );
+
+        return new BadRequestException(messages);
+      },
     }),
   );
 
