@@ -61,6 +61,12 @@ pnpm run start:dev
 docker compose up --build
 ```
 
+ИЛИ
+
+```bash
+docker-compose up -d
+```
+
 Сервисы:
 
 - `app` на порту `3000`
