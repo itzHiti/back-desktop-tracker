@@ -1,2 +1,3 @@
 # back-desktop-tracker
-test technical task
+
+TODO: сделать
