@@ -8,6 +8,7 @@ import {
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './shared/http-exception.filter';
 import { ValidationError } from 'class-validator';
+import { ActivityChunk } from './activitychunk/entities/activitychunk.entity';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,7 +20,10 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('desktop-tracker')
     .build();
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  const documentFactory = () =>
+    SwaggerModule.createDocument(app, config, {
+      extraModels: [ActivityChunk],
+    });
   SwaggerModule.setup('docs', app, documentFactory());
 
   app.useGlobalPipes(

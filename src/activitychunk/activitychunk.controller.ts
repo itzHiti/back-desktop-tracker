@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -6,6 +6,7 @@ import {
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
@@ -73,6 +74,18 @@ export class ActivityController {
   }
 
   @ApiOperation({ summary: 'Get all activity chunks' })
+  @ApiQuery({
+    name: 'from',
+    description: 'Optional start date in ISO format (e.g., 2026-04-12)',
+    required: false,
+    example: '2026-04-12',
+  })
+  @ApiQuery({
+    name: 'to',
+    description: 'Optional end date in ISO format (e.g., 2026-04-13)',
+    required: false,
+    example: '2026-04-13',
+  })
   @ApiOkResponse({
     description: 'Returns all activity chunks',
     schema: {
@@ -81,13 +94,17 @@ export class ActivityController {
           type: 'array',
           items: { $ref: '#/components/schemas/ActivityChunk' },
         },
-        total: { type: 'number', example: 1 },
+        total: { type: 'number', example: 50 },
       },
     },
   })
   @Get()
-  async getActivities() {
-    const data = await this.activityService.findAll();
+  async getActivities(@Query('from') from?: string, @Query('to') to?: string) {
+    const data =
+      from && to
+        ? await this.activityService.findByDateRange(from, to)
+        : await this.activityService.findAll();
+
     return {
       data,
       total: data.length,

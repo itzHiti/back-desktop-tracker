@@ -80,4 +80,19 @@ export class ActivityService {
     }
     return activity;
   }
+
+  async findByDateRange(start: string, end: string): Promise<ActivityChunk[]> {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new BadRequestException('Invalid date format');
+    }
+
+    return this.activityRepository
+      .createQueryBuilder('activity')
+      .where('activity.startedAt >= :start', { start: startDate })
+      .andWhere('activity.startedAt <= :end', { end: endDate })
+      .getMany();
+  }
 }
