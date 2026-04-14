@@ -154,6 +154,9 @@ pnpm run start:dev
 pnpm run lint
 pnpm run test
 pnpm run test:e2e
+pnpm run migration:run
+pnpm run migration:revert
+pnpm run migration:show
 ```
 
 ## 8. Проверка соответствия ТЗ
@@ -171,7 +174,7 @@ pnpm run test:e2e
 
 1. Swagger / OpenAPI - выполнено
 2. Unit-тесты (Jest) - не выполнено (тестовые файлы отсутствуют)
-3. Уникальный индекс + обработка ошибки - частично (уникальное ограничение есть, но явная конвертация дубликата в `409` требует доработки)
+3. Уникальный индекс + обработка ошибки - выполнено
 4. Конфигурация через `.env` - выполнено
 
 ### 8.3 Соответствие бизнес-правилам
@@ -185,7 +188,7 @@ pnpm run test:e2e
 
 ### 8.4 Технический долг и рекомендации
 
-1. Добавить миграции TypeORM вместо `synchronize: true` для production-подхода.
+1. Миграции TypeORM добавлены; использовать только `migration:run` для изменения схемы БД.
 2. Доработать `ExceptionFilter` для корректной обработки `QueryFailedError`:
 	 - `23505` -> `409 Conflict`.
 3. Добавить middleware/interceptor для request-логов на каждый запрос:

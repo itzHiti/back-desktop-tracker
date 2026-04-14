@@ -1,5 +1,5 @@
 import { ActivityChunk } from './entities/activitychunk.entity';
-import { IsNull, QueryFailedError, Repository } from 'typeorm';
+import { Brackets, QueryFailedError, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   BadRequestException,
@@ -26,16 +26,26 @@ export class ActivityService {
       );
     }
 
-    const duplicate = await this.activityRepository.findOne({
-      where: {
-        startedAt,
-        appName: dto.appName,
-        appUrl: dto.appUrl === null ? IsNull() : dto.appUrl,
-      },
-    });
+    const duplicate = await this.activityRepository
+      .createQueryBuilder('activity')
+      .where('activity.startedAt = :startedAt', { startedAt })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('activity.appName = :appName', { appName: dto.appName });
+
+          if (dto.appUrl === null) {
+            qb.orWhere('activity.appUrl IS NULL');
+          } else {
+            qb.orWhere('activity.appUrl = :appUrl', { appUrl: dto.appUrl });
+          }
+        }),
+      )
+      .getOne();
 
     if (duplicate) {
-      throw new ConflictException('Duplicate chunk already exists');
+      throw new ConflictException(
+        'Duplicate chunk already exists for startedAt + appName or startedAt + appUrl',
+      );
     }
 
     const activity = this.activityRepository.create({
@@ -49,7 +59,9 @@ export class ActivityService {
       if (error instanceof QueryFailedError) {
         const driverError = error.driverError as { code?: string };
         if (driverError?.code === '23505') {
-          throw new ConflictException('Duplicate chunk already exists');
+          throw new ConflictException(
+            'Duplicate chunk already exists for startedAt + appName or startedAt + appUrl',
+          );
         }
       }
 
